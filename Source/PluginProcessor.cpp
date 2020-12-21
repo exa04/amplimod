@@ -1,10 +1,3 @@
-/*
-  ==============================================================================
-
-    This file contains the basic framework code for a JUCE plugin processor.
-
-  ==============================================================================
-*/
 #define _USE_MATH_DEFINES
 
 #include <cmath>
@@ -13,6 +6,9 @@
 #include "PluginEditor.h"
 
 float phase_index[] = { 0, 0 };
+
+juce::String AmpliModAudioProcessor::paramFreq("Frequency");
+juce::String AmpliModAudioProcessor::paramMix("Mix");
 
 //==============================================================================
 AmpliModAudioProcessor::AmpliModAudioProcessor()
@@ -24,9 +20,39 @@ AmpliModAudioProcessor::AmpliModAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       )
+                       ),
 #endif
+    mState(*this, &mUndoManager, "AmpliMod",
+        {
+        std::make_unique<juce::AudioParameterFloat>(paramFreq,
+            TRANS("Frequency"),
+            juce::NormalisableRange<float>(1.0f, 20.0f, 0.001),
+            mFreq.get(), "hz",
+            juce::AudioProcessorParameter::genericParameter,
+            [](float v, int) { return juce::String(v, 1); },
+            [](const juce::String& t) { return t.dropLastCharacters(3).getFloatValue(); }),
+
+        std::make_unique<juce::AudioParameterFloat>(paramMix,
+            TRANS("Mix"),
+            juce::NormalisableRange<float>(1.0f, 100.0f, 0.001),
+            mMix.get(), "%",
+            juce::AudioProcessorParameter::genericParameter,
+            [](float v, int) { return juce::String(v, 1); },
+            [](const juce::String& t) { return t.dropLastCharacters(3).getFloatValue(); }),
+        })
 {
+    mState.addParameterListener(paramFreq, this);
+    mState.addParameterListener(paramMix, this);
+}
+
+void AmpliModAudioProcessor::parameterChanged(const juce::String& parameterID, float newValue)
+{
+    if (parameterID == paramMix) {
+        mMix = newValue;
+    }
+    else if (parameterID == paramFreq) {
+        mFreq = newValue;
+    }
 }
 
 AmpliModAudioProcessor::~AmpliModAudioProcessor()
@@ -136,6 +162,9 @@ bool AmpliModAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts)
 
 void AmpliModAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
+    double sin_amp = mMix.get() / 100;
+    phase_delta = 2 * M_PI * mFreq.get() / fs;
+
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
@@ -146,11 +175,12 @@ void AmpliModAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     {
         auto* channelData = buffer.getWritePointer (channel);
         for (int i = 0; i < buffer.getNumSamples(); ++i){
-            if(phase_index[channel] > 2 * M_PI) phase_index[channel] = 0;
+            if (phase_index[channel] > 2 * M_PI) { phase_index[channel] = 0; };
             phase_index[channel] += phase_delta;
             float sine = sin(phase_index[channel]);
             channelData[i] *= 1 - (sine * sin_amp);
         }
+        DBG(sin_amp);
      
     }
 }
@@ -169,15 +199,21 @@ juce::AudioProcessorEditor* AmpliModAudioProcessor::createEditor()
 //==============================================================================
 void AmpliModAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
+    juce::MemoryOutputStream stream(destData, false);
+    mState.state.writeToStream(stream);
+}
+
+juce::AudioProcessorValueTreeState& AmpliModAudioProcessor::getValueTreeState()
+{
+    return mState;
 }
 
 void AmpliModAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    // You should use this method to restore your parameters from this memory block,
-    // whose contents will have been created by the getStateInformation() call.
+    juce::ValueTree tree = juce::ValueTree::readFromData(data, sizeInBytes);
+    if (tree.isValid()) {
+        mState.state = tree;
+    }
 }
 
 //==============================================================================
