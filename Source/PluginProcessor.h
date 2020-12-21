@@ -1,5 +1,3 @@
-
-
 #pragma once
 
 #include <JuceHeader.h>
@@ -7,7 +5,8 @@
 //==============================================================================
 /**
 */
-class AmpliModAudioProcessor  : public juce::AudioProcessor
+class AmpliModAudioProcessor  : public juce::AudioProcessor,
+    public juce::AudioProcessorValueTreeState::Listener
 {
 public:
     //==============================================================================
@@ -22,6 +21,7 @@ public:
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
    #endif
 
+    void parameterChanged(const juce::String& parameterID, float newValue) override;
     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 
     //==============================================================================
@@ -47,11 +47,20 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
-    double phase_delta = 0;
+    float phase_delta;
     float fs;
-    float sin_amp = 0;
 
+    juce::AudioProcessorValueTreeState& getValueTreeState();
+
+    static juce::String paramFreq;
+    static juce::String paramMix;
 private:
+    juce::Atomic<float>   mFreq{ 1.0f };
+    juce::Atomic<float>   mMix{ 100.0f };
+
+    juce::UndoManager                  mUndoManager;
+    juce::AudioProcessorValueTreeState mState;
+
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AmpliModAudioProcessor)
 };
