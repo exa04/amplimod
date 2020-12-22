@@ -54,9 +54,11 @@ public:
 
     static juce::String paramFreq;
     static juce::String paramMix;
+    static juce::String paramStereoOffset;
 private:
     juce::Atomic<float>   mFreq{ 1.0f };
     juce::Atomic<float>   mMix{ 100.0f };
+    juce::Atomic<float>   mStereoOffset{ 0.0f };
 
     juce::UndoManager                  mUndoManager;
     juce::AudioProcessorValueTreeState mState;

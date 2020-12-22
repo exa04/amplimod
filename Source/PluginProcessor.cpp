@@ -9,6 +9,7 @@ float phase_index[] = { 0, 0 };
 
 juce::String AmpliModAudioProcessor::paramFreq("Frequency");
 juce::String AmpliModAudioProcessor::paramMix("Mix");
+juce::String AmpliModAudioProcessor::paramStereoOffset("Stereo Offset");
 
 //==============================================================================
 AmpliModAudioProcessor::AmpliModAudioProcessor()
@@ -26,7 +27,7 @@ AmpliModAudioProcessor::AmpliModAudioProcessor()
         {
         std::make_unique<juce::AudioParameterFloat>(paramFreq,
             TRANS("Frequency"),
-            juce::NormalisableRange<float>(1.0f, 20.0f, 0.001),
+            juce::NormalisableRange<float>(0.001f, 20.0f, 0.001),
             mFreq.get(), "hz",
             juce::AudioProcessorParameter::genericParameter,
             [](float v, int) { return juce::String(v, 1); },
@@ -34,8 +35,16 @@ AmpliModAudioProcessor::AmpliModAudioProcessor()
 
         std::make_unique<juce::AudioParameterFloat>(paramMix,
             TRANS("Mix"),
-            juce::NormalisableRange<float>(1.0f, 100.0f, 0.001),
+            juce::NormalisableRange<float>(0.0f, 100.0f, 0.001),
             mMix.get(), "%",
+            juce::AudioProcessorParameter::genericParameter,
+            [](float v, int) { return juce::String(v, 1); },
+            [](const juce::String& t) { return t.dropLastCharacters(3).getFloatValue(); }),
+
+        std::make_unique<juce::AudioParameterFloat>(paramStereoOffset,
+            TRANS("Stereo Offset"),
+            juce::NormalisableRange<float>(-50.0f, 50.0f, 0.001),
+            mStereoOffset.get(), "%",
             juce::AudioProcessorParameter::genericParameter,
             [](float v, int) { return juce::String(v, 1); },
             [](const juce::String& t) { return t.dropLastCharacters(3).getFloatValue(); }),
@@ -43,6 +52,7 @@ AmpliModAudioProcessor::AmpliModAudioProcessor()
 {
     mState.addParameterListener(paramFreq, this);
     mState.addParameterListener(paramMix, this);
+    mState.addParameterListener(paramStereoOffset, this);
 }
 
 void AmpliModAudioProcessor::parameterChanged(const juce::String& parameterID, float newValue)
@@ -52,6 +62,9 @@ void AmpliModAudioProcessor::parameterChanged(const juce::String& parameterID, f
     }
     else if (parameterID == paramFreq) {
         mFreq = newValue;
+    }
+    else if (parameterID == paramStereoOffset) {
+        mStereoOffset = newValue;
     }
 }
 
@@ -164,7 +177,7 @@ void AmpliModAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
 {
     double sin_amp = mMix.get() / 100;
     phase_delta = 2 * M_PI * mFreq.get() / fs;
-
+    float phase_offset = 2 * M_PI * mStereoOffset.get() / 100;
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
@@ -177,7 +190,13 @@ void AmpliModAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
         for (int i = 0; i < buffer.getNumSamples(); ++i){
             if (phase_index[channel] > 2 * M_PI) { phase_index[channel] = 0; };
             phase_index[channel] += phase_delta;
-            float sine = sin(phase_index[channel]);
+            float sine;
+
+            if(channel == 0)
+                sine = sin(phase_index[channel]);
+            else
+                sine = sin(phase_index[channel] + phase_offset);
+
             channelData[i] *= 1 - (sine * sin_amp);
         }
         DBG(sin_amp);

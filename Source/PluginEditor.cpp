@@ -6,13 +6,15 @@
 AmpliModAudioProcessorEditor::AmpliModAudioProcessorEditor (AmpliModAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
-    setSize (600, 80);
+    setSize (600, 140);
+
     addAndMakeVisible(frequencySlider);
-    frequencySlider.setRange(1, 20);
+    frequencySlider.setRange(0.001, 20);
     frequencySlider.setTextValueSuffix(" Hz");
     addAndMakeVisible(frequencyLabel);
     frequencyLabel.setText("Frequency", juce::dontSendNotification);
     frequencyLabel.attachToComponent(&frequencySlider, true);
+
     addAndMakeVisible(ampSlider);
     ampSlider.setRange(0, 100);
     ampSlider.setTextValueSuffix("%");
@@ -20,26 +22,30 @@ AmpliModAudioProcessorEditor::AmpliModAudioProcessorEditor (AmpliModAudioProcess
     ampLabel.setText("Mix", juce::dontSendNotification);
     ampLabel.attachToComponent(&ampSlider, true);
 
-    frequencySlider.setColour(juce::Slider::ColourIds::backgroundColourId, juce::Colour::fromRGB(255, 170, 220));
-    frequencySlider.setColour(juce::Slider::ColourIds::trackColourId, juce::Colour::fromRGB(240, 140, 255));
-    frequencySlider.setColour(juce::Slider::ColourIds::thumbColourId, juce::Colour::fromRGB(220, 120, 240));
-    frequencySlider.setColour(juce::Slider::ColourIds::textBoxOutlineColourId, juce::Colour::fromRGB(220, 120, 240));
-    frequencySlider.setColour(juce::Slider::ColourIds::textBoxHighlightColourId, juce::Colour::fromRGB(220, 120, 240));
-    frequencySlider.setColour(juce::Slider::ColourIds::textBoxTextColourId, juce::Colour::fromRGB(90, 10, 90));
-    frequencyLabel.setColour(juce::Label::ColourIds::textColourId, juce::Colour::fromRGB(90, 10, 90));
+    addAndMakeVisible(stereoSlider);
+    stereoSlider.setRange(-50, 50);
+    stereoSlider.setTextValueSuffix("%");
+    addAndMakeVisible(stereoLabel);
+    stereoLabel.setText("Stereo Offset", juce::dontSendNotification);
+    stereoLabel.attachToComponent(&stereoSlider, true);
 
-    ampSlider.setColour(juce::Slider::ColourIds::backgroundColourId, juce::Colour::fromRGB(255, 170, 220));
-    ampSlider.setColour(juce::Slider::ColourIds::trackColourId, juce::Colour::fromRGB(240, 140, 255));
-    ampSlider.setColour(juce::Slider::ColourIds::thumbColourId, juce::Colour::fromRGB(220, 120, 240));
-    ampSlider.setColour(juce::Slider::ColourIds::textBoxOutlineColourId, juce::Colour::fromRGB(220, 120, 240));
-    ampSlider.setColour(juce::Slider::ColourIds::textBoxHighlightColourId, juce::Colour::fromRGB(220, 120, 240));
-    ampSlider.setColour(juce::Slider::ColourIds::textBoxTextColourId, juce::Colour::fromRGB(90, 10, 90));
-    ampLabel.setColour(juce::Label::ColourIds::textColourId, juce::Colour::fromRGB(90, 10, 90));
-    
+    AmpliModAudioProcessorEditor::setSliderStyle(frequencySlider, frequencyLabel);
+    AmpliModAudioProcessorEditor::setSliderStyle(ampSlider, ampLabel);
+    AmpliModAudioProcessorEditor::setSliderStyle(stereoSlider, stereoLabel);
 }
 
 AmpliModAudioProcessorEditor::~AmpliModAudioProcessorEditor()
 {
+}
+
+void AmpliModAudioProcessorEditor::setSliderStyle(juce::Slider& slider, juce::Label& sliderLabel) {
+    slider.setColour(juce::Slider::ColourIds::backgroundColourId, juce::Colour::fromRGB(255, 170, 220));
+    slider.setColour(juce::Slider::ColourIds::trackColourId, juce::Colour::fromRGB(240, 140, 255));
+    slider.setColour(juce::Slider::ColourIds::thumbColourId, juce::Colour::fromRGB(220, 120, 240));
+    slider.setColour(juce::Slider::ColourIds::textBoxOutlineColourId, juce::Colour::fromRGB(220, 120, 240));
+    slider.setColour(juce::Slider::ColourIds::textBoxHighlightColourId, juce::Colour::fromRGB(220, 120, 240));
+    slider.setColour(juce::Slider::ColourIds::textBoxTextColourId, juce::Colour::fromRGB(90, 10, 90));
+    sliderLabel.setColour(juce::Label::ColourIds::textColourId, juce::Colour::fromRGB(90, 10, 90));
 }
 
 void AmpliModAudioProcessorEditor::paint (juce::Graphics& g)
@@ -55,4 +61,5 @@ void AmpliModAudioProcessorEditor::resized()
     auto sliderLeft = 120;
     frequencySlider.setBounds(sliderLeft, 20, getWidth() - sliderLeft - 10, 20);
     ampSlider.setBounds(sliderLeft, 60, getWidth() - sliderLeft - 10, 20);
+    stereoSlider.setBounds(sliderLeft, 100, getWidth() - sliderLeft - 10, 20);
 }
