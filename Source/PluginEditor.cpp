@@ -6,7 +6,7 @@
 AmpliModAudioProcessorEditor::AmpliModAudioProcessorEditor (AmpliModAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
-    setSize (600, 140);
+    setSize (600, 160);
 
     addAndMakeVisible(frequencySlider);
     frequencySlider.setRange(0.001, 20);
@@ -52,14 +52,18 @@ void AmpliModAudioProcessorEditor::paint (juce::Graphics& g)
 {
     g.fillAll (juce::Colour::fromRGB(255,200,230));
     g.setColour (juce::Colour::fromRGB(90, 10, 90));
-    g.setFont (15.0f);
-    g.drawFittedText ("AmpMod", getLocalBounds(), juce::Justification::topLeft, 1);
+    g.setFont(30.0f);
+    g.drawFittedText("AmpliMod", getLocalBounds(), juce::Justification::centredTop, 1);
+    g.setColour(juce::Colour::fromRGB(220, 120, 240));
+    g.setFont(15.0f);
+    g.drawFittedText("BY GITHUB.COM/SYLVEON-ARI", getLocalBounds(), juce::Justification::topRight, 1);
+    g.drawFittedText("AMPLITUDE MODULATOR", getLocalBounds(), juce::Justification::topLeft, 1);
 }
 
 void AmpliModAudioProcessorEditor::resized()
 {
     auto sliderLeft = 120;
-    frequencySlider.setBounds(sliderLeft, 20, getWidth() - sliderLeft - 10, 20);
-    ampSlider.setBounds(sliderLeft, 60, getWidth() - sliderLeft - 10, 20);
-    stereoSlider.setBounds(sliderLeft, 100, getWidth() - sliderLeft - 10, 20);
+    frequencySlider.setBounds(sliderLeft, 40, getWidth() - sliderLeft - 10, 20);
+    ampSlider.setBounds(sliderLeft, 80, getWidth() - sliderLeft - 10, 20);
+    stereoSlider.setBounds(sliderLeft, 120, getWidth() - sliderLeft - 10, 20);
 }
