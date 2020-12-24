@@ -10,6 +10,8 @@ float phase_index[] = { 0, 0 };
 juce::String AmpliModAudioProcessor::paramFreq("Frequency");
 juce::String AmpliModAudioProcessor::paramMix("Mix");
 juce::String AmpliModAudioProcessor::paramStereoOffset("Stereo Offset");
+juce::String AmpliModAudioProcessor::paramHF("High Frequency");
+juce::String AmpliModAudioProcessor::paramSimplify("Eco Mode");
 
 AmpliModAudioProcessor::AmpliModAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -26,7 +28,7 @@ AmpliModAudioProcessor::AmpliModAudioProcessor()
         {
         std::make_unique<juce::AudioParameterFloat>(paramFreq,
             TRANS("Frequency"),
-            juce::NormalisableRange<float>(0.001f, 20.0f, 0.001),
+            juce::NormalisableRange<float>(0.001f, 1000.0f, 0.001),
             mFreq.get(), "hz",
             juce::AudioProcessorParameter::genericParameter,
             [](float v, int) { return juce::String(v, 1); },
@@ -47,11 +49,27 @@ AmpliModAudioProcessor::AmpliModAudioProcessor()
             juce::AudioProcessorParameter::genericParameter,
             [](float v, int) { return juce::String(v, 1); },
             [](const juce::String& t) { return t.dropLastCharacters(3).getFloatValue(); }),
+
+        std::make_unique<juce::AudioParameterBool>(paramSimplify,
+            TRANS("Eco Mode"),
+            false,
+            "ECO",
+            [](bool v, int) { if (v) return "True"; else return "False"; },
+            [](const juce::String& t) { if (t == "True") return true; else return false; }),
+
+        std::make_unique<juce::AudioParameterBool>(paramHF,
+            TRANS("High Frequency"),
+            false,
+            "HF",
+            [](bool v, int) { if (v) return "True"; else return "False"; },
+            [](const juce::String& t) { if (t == "True") return true; else return false; }),
         })
 {
     mState.addParameterListener(paramFreq, this);
     mState.addParameterListener(paramMix, this);
     mState.addParameterListener(paramStereoOffset, this);
+    mState.addParameterListener(paramSimplify, this);
+    mState.addParameterListener(paramHF, this);
 }
 
 void AmpliModAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
@@ -65,6 +83,8 @@ void AmpliModAudioProcessor::parameterChanged(const juce::String& parameterID, f
     if (parameterID == paramMix) mMix = newValue;
     else if (parameterID == paramFreq) mFreq = newValue;
     else if (parameterID == paramStereoOffset) mStereoOffset = newValue;
+    else if (parameterID == paramSimplify) mSimplify = newValue;
+    else if (parameterID == paramHF) mHF = newValue;
 }
 
 void AmpliModAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
@@ -81,25 +101,47 @@ void AmpliModAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
-        for (int i = 0; i < buffer.getNumSamples(); ++i){
-            if (phase_index[channel] > 2 * M_PI) {
-                phase_index[channel] = 0;
-            };
-            phase_index[channel] += phase_delta;
-            float sine;
+    if (!mSimplify.get()) {
+        for (int channel = 0; channel < totalNumInputChannels; ++channel)
+        {
+            auto* channelData = buffer.getWritePointer(channel);
+            for (int i = 0; i < buffer.getNumSamples(); ++i) {
+                if (phase_index[channel] > 2 * M_PI)
+                    phase_index[channel] -= 2 * M_PI;
+                else phase_index[channel] += phase_delta;
 
-            if(channel == 0)
+                float sine;
+                if (channel == 0)
+                    sine = sin(phase_index[channel]);
+                else
+                    sine = sin(phase_index[channel] + phase_offset);
+
+                channelData[i] *= 1 - (sine * sin_amp);
+            }
+        }
+    }
+    else
+        for (int channel = 0; channel < totalNumInputChannels; ++channel)
+        {
+            auto* channelData = buffer.getWritePointer(channel);
+
+            if (phase_index[channel] > 2 * M_PI)
+                phase_index[channel] -= 2 * M_PI;
+
+            else phase_index[channel] += phase_delta * buffer.getNumSamples();
+
+            float sine;
+            if (channel == 0)
                 sine = sin(phase_index[channel]);
             else
                 sine = sin(phase_index[channel] + phase_offset);
 
-            channelData[i] *= 1 - (sine * sin_amp);
+            double sine_f = 1 - (sine * sin_amp);
+
+            for (int i = 0; i < buffer.getNumSamples(); ++i) {
+                channelData[i] *= sine_f;
+            }
         }
-        DBG(sin_amp);
-    }
 }
 
 #if true
