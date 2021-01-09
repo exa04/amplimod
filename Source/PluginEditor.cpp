@@ -6,7 +6,7 @@
 AmpliModAudioProcessorEditor::AmpliModAudioProcessorEditor (AmpliModAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
-    setSize (600, 160);
+    setSize (600, 260);
 
     addAndMakeVisible(frequencySlider);
     frequencySlider.setRange(0.001, 20);
@@ -28,6 +28,32 @@ AmpliModAudioProcessorEditor::AmpliModAudioProcessorEditor (AmpliModAudioProcess
     addAndMakeVisible(stereoLabel);
     stereoLabel.setText("Stereo Offset", juce::dontSendNotification);
     stereoLabel.attachToComponent(&stereoSlider, true);
+
+    addAndMakeVisible(simplifyBtn);
+    simplifyBtn.setClickingTogglesState(true);
+
+    addAndMakeVisible(hfBtn);
+    hfBtn.setClickingTogglesState(true);
+    hfBtn.onStateChange = [this]() {
+        if (hfBtn.getToggleState()) {
+            frequencySlider.setRange(0.001, 1000);
+            repaint();
+        }
+        else {
+            frequencySlider.setRange(0.001, 20);
+            repaint();
+        }
+        audioProcessor.mHF.set(hfBtn.getToggleState());
+    };
+
+    if (!audioProcessor.mHF.get()) {
+        hfBtn.setToggleState(false, juce::NotificationType::sendNotification);
+    }
+    else {
+        hfBtn.setToggleState(true, juce::NotificationType::sendNotification);
+    }
+    int v = audioProcessor.mHF.get() ? 1 : 0;
+    DBG(v);
 
     AmpliModAudioProcessorEditor::setSliderStyle(frequencySlider, frequencyLabel);
     AmpliModAudioProcessorEditor::setSliderStyle(ampSlider, ampLabel);
@@ -66,4 +92,6 @@ void AmpliModAudioProcessorEditor::resized()
     frequencySlider.setBounds(sliderLeft, 40, getWidth() - sliderLeft - 10, 20);
     ampSlider.setBounds(sliderLeft, 80, getWidth() - sliderLeft - 10, 20);
     stereoSlider.setBounds(sliderLeft, 120, getWidth() - sliderLeft - 10, 20);
+    simplifyBtn.setBounds(getWidth() - 50, 160, 40, 20);
+    hfBtn.setBounds(getWidth() - 50, 200, 40, 20);
 }

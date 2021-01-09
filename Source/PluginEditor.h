@@ -25,6 +25,9 @@ private:
     juce::Slider stereoSlider;
     juce::Label  stereoLabel;
 
+    juce::TextButton simplifyBtn{ "ECO" };
+    juce::TextButton hfBtn{ "HF" };
+
     void setSliderStyle(juce::Slider& slider, juce::Label& sliderLabel);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AmpliModAudioProcessorEditor)
@@ -32,4 +35,6 @@ private:
     juce::AudioProcessorValueTreeState::SliderAttachment mFreqAttachment{ audioProcessor.getValueTreeState(), AmpliModAudioProcessor::paramFreq, frequencySlider };
     juce::AudioProcessorValueTreeState::SliderAttachment mMixAttachment{ audioProcessor.getValueTreeState(), AmpliModAudioProcessor::paramMix, ampSlider };
     juce::AudioProcessorValueTreeState::SliderAttachment mStereoOffsetAttachment{ audioProcessor.getValueTreeState(), AmpliModAudioProcessor::paramStereoOffset, stereoSlider };
+    juce::AudioProcessorValueTreeState::ButtonAttachment mHF{ audioProcessor.getValueTreeState(), AmpliModAudioProcessor::paramHF, hfBtn };
+    juce::AudioProcessorValueTreeState::ButtonAttachment mSimplify{ audioProcessor.getValueTreeState(), AmpliModAudioProcessor::paramSimplify, simplifyBtn };
 };

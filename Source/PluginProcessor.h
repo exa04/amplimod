@@ -55,10 +55,17 @@ public:
     static juce::String paramFreq;
     static juce::String paramMix;
     static juce::String paramStereoOffset;
-private:
+    static juce::String paramSimplify;
+    static juce::String paramHF;
+
     juce::Atomic<float>   mFreq{ 1.0f };
     juce::Atomic<float>   mMix{ 100.0f };
     juce::Atomic<float>   mStereoOffset{ 0.0f };
+    juce::Atomic<bool>    mSimplify{ false };
+    juce::Atomic<float>   mHF{ true };
+
+    bool simplified = true;
+private:
 
     juce::UndoManager                  mUndoManager;
     juce::AudioProcessorValueTreeState mState;
