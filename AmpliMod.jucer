@@ -2,10 +2,10 @@
 
 <JUCERPROJECT id="fPCF9a" name="AmpliMod" projectType="audioplug" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1"
-              pluginVST3Category="Fx,Modulation" companyName="Ari" version="1.0.0"
-              pluginRTASCategory="32">
+              pluginVST3Category="Fx,Modulation" version="1.1.0" pluginRTASCategory="32">
   <MAINGROUP id="PsH0DM" name="AmpliMod">
     <GROUP id="{C092B1B1-82DF-F8EE-AEE3-B6C1A35F335D}" name="Source">
+      <FILE id="CBaHdi" name="Colors.h" compile="0" resource="0" file="Source/Colors.h"/>
       <FILE id="HxX700" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="cawKjg" name="PluginProcessor.h" compile="0" resource="0"
