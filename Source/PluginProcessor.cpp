@@ -101,34 +101,13 @@ void AmpliModAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    if (!mSimplify.get()) {
         for (int channel = 0; channel < totalNumInputChannels; ++channel)
         {
-            auto* channelData = buffer.getWritePointer(channel);
-            for (int i = 0; i < buffer.getNumSamples(); ++i) {
-                if (phase_index[channel] > 2 * M_PI)
-                    phase_index[channel] -= 2 * M_PI;
-                else phase_index[channel] += phase_delta;
-
-                float sine;
-                if (channel == 0)
-                    sine = sin(phase_index[channel]);
-                else
-                    sine = sin(phase_index[channel] + phase_offset);
-
-                channelData[i] *= 1 - (sine * sin_amp);
-            }
-        }
-    }
-    else
-        for (int channel = 0; channel < totalNumInputChannels; ++channel)
-        {
-            auto* channelData = buffer.getWritePointer(channel);
-
+        auto* channelData = buffer.getWritePointer(channel);
+        for (int i = 0; i < buffer.getNumSamples(); ++i) {
             if (phase_index[channel] > 2 * M_PI)
                 phase_index[channel] -= 2 * M_PI;
-
-            else phase_index[channel] += phase_delta * buffer.getNumSamples();
+            else phase_index[channel] += phase_delta;
 
             float sine;
             if (channel == 0)
@@ -136,12 +115,10 @@ void AmpliModAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
             else
                 sine = sin(phase_index[channel] + phase_offset);
 
-            double sine_f = 1 - (sine * sin_amp);
-
-            for (int i = 0; i < buffer.getNumSamples(); ++i) {
-                channelData[i] *= sine_f;
-            }
+            channelData[i] *= 1 - (sine * sin_amp);
         }
+    }
+    visualizer.pushBuffer(buffer);
 }
 
 #if true

@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
+#include "Colors.h"
 
 //==============================================================================
 /**
@@ -18,6 +19,13 @@ public:
 
 private:
     AmpliModAudioProcessor& audioProcessor;
+    Visuals::Colors colors;
+    Visuals::Components components;
+
+    std::vector<juce::Rectangle<int>> bounds;
+
+    void createSlider(juce::Slider& slider, juce::Label& label, double rstart, double rend, std::string suffix, std::string name);
+    
     juce::Slider frequencySlider;
     juce::Label  frequencyLabel;
     juce::Slider ampSlider;
@@ -27,8 +35,6 @@ private:
 
     juce::TextButton simplifyBtn{ "ECO" };
     juce::TextButton hfBtn{ "HF" };
-
-    void setSliderStyle(juce::Slider& slider, juce::Label& sliderLabel);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AmpliModAudioProcessorEditor)
 

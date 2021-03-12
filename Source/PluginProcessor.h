@@ -2,6 +2,16 @@
 
 #include <JuceHeader.h>
 
+class Visualizer : public juce::AudioVisualiserComponent
+{
+public:
+    Visualizer() : AudioVisualiserComponent(2)
+    {
+        setBufferSize(512);
+        setSamplesPerBlock(256);
+    }
+};
+
 //==============================================================================
 /**
 */
@@ -63,6 +73,8 @@ public:
     juce::Atomic<float>   mStereoOffset{ 0.0f };
     juce::Atomic<bool>    mSimplify{ false };
     juce::Atomic<float>   mHF{ true };
+
+    Visualizer visualizer;
 
     bool simplified = true;
 private:
