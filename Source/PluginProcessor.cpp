@@ -115,7 +115,7 @@ void AmpliModAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
             else
                 sine = sin(phase_index[channel] + phase_offset);
 
-            channelData[i] *= 1 - (sine * sin_amp);
+            channelData[i] *= 1 - (sine * sin_amp / 2);
         }
     }
     visualizer.pushBuffer(buffer);
